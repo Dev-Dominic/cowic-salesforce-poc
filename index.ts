@@ -19,6 +19,25 @@ type CreateOrder = {
   Delivery_Date__c: Date,
 }
 
+type CreateDeliveryOrder = {
+  Account__c: string,
+  Delivery_Date__c: Date,
+  Upload_First_Name__c: string,
+  Upload_Last_Name__c: string,
+  Upload_Phone__c: string,
+  Upload_Email__c: string,
+  Upload_Address_Line_1__c: string,
+  Upload_Address_Line_2__c: string,
+  Upload_City__c: string,
+  Upload_State__c: string,
+  Upload_Zip__c: number,
+  Upload_Delivery_Notes__c: string,
+  Units__c: number,
+  Order_Details__c: string,
+  Is_imported__c: boolean,
+  Delivery_Status__c: string
+}
+
 server.get('/shoppers', async () => {
   const shoppers = await conn.query('SELECT Id, Name, AccountNumber, BillingAddress, ShippingAddress FROM Account');
   return { shoppers };
@@ -33,6 +52,60 @@ server.get('/orders', async () => {
     orders: {...result}, 
     orderItems: {...orderItems}
   };
+})
+
+server.get('/deliveryOrders', async () => {
+  // https://developer.salesforce.com/docs/atlas.en-us.order_management_developer_guide_html.meta/order_management_developer_guide_html/order_management_import_data.htm
+  const deliveryOrders = await conn.query(
+    'SELECT Name, Delivery_Contact_Name__c FROM Delivery_Order__c'
+  );
+  
+  return { deliveryOrders };
+})
+
+server.post('/deliveryOrders', async (request, response) => {
+  const { 
+    Account__c,
+    Delivery_Date__c,
+    Upload_First_Name__c,
+    Upload_Last_Name__c,
+    Upload_Phone__c,
+    Upload_Email__c,
+    Upload_Address_Line_1__c,
+    Upload_Address_Line_2__c,
+    Upload_City__c,
+    Upload_State__c,
+    Upload_Zip__c,
+    Upload_Delivery_Notes__c,
+    Units__c,
+    Order_Details__c,
+    Is_imported__c,
+    Delivery_Status__c
+  } = request.body as CreateDeliveryOrder;
+
+  // Create new delivery order
+  const result = await conn.sobject('Delivery_Order__c').create([
+    {
+      Account__c,
+      Delivery_Date__c,
+      Upload_First_Name__c,
+      Upload_Last_Name__c,
+      Upload_Phone__c,
+      Upload_Email__c,
+      Upload_Address_Line_1__c,
+      Upload_Address_Line_2__c,
+      Upload_City__c,
+      // Upload_State__c,
+      Upload_Zip__c,
+      Upload_Delivery_Notes__c,
+      Units__c,
+      Order_Details__c,
+      Is_imported__c,
+      Delivery_Status__c
+    }
+  ]);
+
+  return { ...result };
 })
 
 server.get('/products', async () => {
